@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react'
 import './App.css'
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd'
+import { draggableControl } from './functions/draggable-control'
+import { IColumns, ITask } from './interfaces/ITodo'
+import { Task } from './components/Task'
 
 const initialTasks = [
   { id: "task-1", content: "Take out the garbage"},
@@ -18,143 +21,52 @@ const initialColumns = [
   {
     name: 'Doing',
     id: '2345',
-    items: [] as Task[]
+    items: [] as ITask[]
   },
   {
     name: 'Terminated',
     id: '3456',
-    items: [] as Task[]
+    items: [] as ITask[]
   },
-
 ]
 
-interface Task {
-  id: string;
-  content: string;
-}
-
-
-interface IColumn {
-  id: string;
-  name: string;
-  items: Task[]
-}
 
 function App() {
-  const [columns, setColumns] = useState<IColumn[]>(initialColumns);
-  const draggableRef = useRef();
-  const drroppableRef = useRef();
+  const [columns, setColumns] = useState<IColumns[]>(initialColumns);
 
   function handleOnDragEnd(result: DropResult) {
-    const { destination, source, draggableId } = result;
+    const updatedColumns = draggableControl({result, originalColumns: columns});
     
-    if(!destination) return;
-
-    console.log(result)
-
-    // localiza à coluna do kaban em movimento e o respectivo elemento.
-    const kaban: IColumn[] = JSON.parse(JSON.stringify(columns));
-    const columnSelect = kaban.filter(column => column.id === source.droppableId)[0];
-    const draggedItem = columnSelect.items.filter((item, index) => index === source.index)[0];
-    
-    // verifica para onde draggedItem está sendo movido.
-    
-    // caso 1: se estiver sendo movido para o mesmo local, não faz nada.
-    if(source.droppableId === destination.droppableId 
-      && source.index === destination.index) return;
-
-    // caso seja dentro da mesma coluna em uma posição diferente, modifica o array
-    if(source.droppableId === destination.droppableId 
-      && source.index !== destination.index) {
-        // filtra o draggedItem da coluna e o coloca no destino correto
-        let filteredDraggedItem = columnSelect.items.filter(item => draggedItem.id !== item.id);
-        filteredDraggedItem.splice(destination.index, 0, draggedItem);
-
-        columnSelect.items = filteredDraggedItem;
-
-        const updatedKaban = kaban.map(columns => {
-          if(columns.id === columnSelect.id) {
-            return {
-              ...columnSelect
-            }
-          }
-
-          return columns
-        });
-
-        setColumns(updatedKaban);
-      }
-
-
-    // caso seja em uma coluna diferente outra lógica
-    if(source.droppableId !== destination.droppableId) {
-        
-        let filteredDraggedItem = columnSelect.items.filter(item => draggedItem.id !== item.id); 
-        columnSelect.items = filteredDraggedItem;
-
-        const updatedKaban1 = kaban.map(columns => {
-          if(columns.id === columnSelect.id) {
-            return {
-              ...columnSelect
-            }
-          }
-
-          return columns
-        });
-
-        setColumns(updatedKaban1);
-        
-        // se a a coluna for diferente preciso saber qual é a destinataria e inserir
-        const destinaitonColumn = kaban.filter(column => column.id === destination.droppableId)[0];
-        
-        destinaitonColumn.items.push(draggedItem);       
-
-        const updatedKaban2 = kaban.map(columns => {
-          if(columns.id === destinaitonColumn.id) {
-            return {
-              ...destinaitonColumn
-            }
-          }
-
-          return columns
-        });
-
-        setColumns(updatedKaban2);
-    }
+    if(updatedColumns) setColumns(updatedColumns);
   }
 
   return (
     <div className="App" style={{ display: 'flex', gap: '60px'}}>
+
       <DragDropContext onDragEnd={(result) => handleOnDragEnd(result)}>
+        
         {columns.map((column) => (
           <div style={{ display: 'flex', flexDirection: 'column'}} key={column.id}>
           <h1>{column.name}</h1>
 
           <Droppable droppableId={column.id}>
             {(provided) => (
+
               <div ref={provided.innerRef} {...provided.droppableProps}>
-    
-                <div style={{ backgroundColor: '#333', height: '600px', display: 'flex', flexDirection: 'column', gap: '4px', padding: '16px'}}>
+                
+                <div style={{ backgroundColor: '#F3F5F6', height: '600px', display: 'flex', flexDirection: 'column', gap: '20px', padding: '16px'}}>
                   
                   {column.items.map((task, index) => (
                    <Draggable draggableId={task.id} index={index} key={task.id}>
+                      
                       {(provided, snapshot) => (
-                        <div 
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps} 
-                          // isDragging={snapshot.isDragging} styled.component
-                          style={{ 
-                            border: '2px solid #d54689', 
-                            borderRadius: '8px', 
-                            padding: '12px', 
-                            width: '300px',
-                            backgroundColor: `${snapshot.isDragging ? "lightgreen" : "transparent"}`,
-                            ...provided.draggableProps.style
-                          }}>
-                          {task.content}
-                        </div>
+                        <Task 
+                          task={task} 
+                          provided={provided} 
+                          snapshot={snapshot} 
+                        />
                       )}
+
                     </Draggable>       
                   ))}
                   {provided.placeholder}
@@ -173,3 +85,114 @@ function App() {
 }
 
 export default App;
+
+
+
+// function handleOnDragEnd(result: DropResult) {
+//   const { destination, source, draggableId } = result;
+  
+//   if(!destination) return;
+
+//   // localiza à coluna em movimento e o respectivo elemento
+//   const kabanColumns: IColumn[] = JSON.parse(JSON.stringify(columns));
+//   const selectedColumn = kabanColumns.filter(column => column.id === source.droppableId)[0];
+//   const draggedTask = selectedColumn.items.filter((item, index) => index === source.index)[0];
+  
+//   // console.log('COLUNAS => ', kabanColumns);
+//   // console.log('COLUNA ESPECIFICA => ', selectedColumn);
+//   // console.log('TASK ESPECIFICA => ', draggedTask);
+  
+//   // caso 1: se não ocorre movimento.
+//   if(source.droppableId === destination.droppableId 
+//     && source.index === destination.index) return;
+
+//   // caso 2: se movimento ocorre dentro da selectedColumn em uma posição diferente, modifica o array.
+//   if(source.droppableId === destination.droppableId 
+//     && source.index !== destination.index) {
+
+//       console.log('CASE 2 : ');
+
+//       const updatedColumn = selectedColumn;
+//       // cria uma lista de tasks nova sem objeto draggedTask
+//       let filteredDraggedItems = updatedColumn.items.filter(item => draggedTask.id !== item.id);
+
+//       filteredDraggedItems.splice(destination.index, 0, draggedTask);
+
+//       updatedColumn.items = filteredDraggedItems;
+
+//       const updatedKabanColumns = kabanColumns.map(columns => {
+//         if(columns.id === updatedColumn.id) {
+//           return {
+//             ...updatedColumn
+//           }
+//         }
+
+//         return columns;
+//       });
+
+//       setColumns(updatedKabanColumns);
+//     }
+
+
+//   // caso 3: se movimento é para uma da source != destination
+//   if(source.droppableId !== destination.droppableId) {
+//     console.log('CASE 3 : ');      
+
+//     // Encontra a coluna de destino
+//     const updatedColumn = selectedColumn;
+//     const destinationColumn = kabanColumns.filter(column => column.id === destination.droppableId)[0];
+    
+//     // caso 03.01 - coluna vazia, apenas faz a inserção
+//     if(destinationColumn.items.length === 0) {
+//       console.log('CASE 3.1 =>')
+
+//       // inseri a task na nova tabela
+//       destinationColumn.items.push(draggedTask);
+
+//       // remove a task da tabela anterior
+//       let filteredDraggedItems = updatedColumn.items.filter(item => draggedTask.id !== item.id); 
+      
+//       updatedColumn.items = filteredDraggedItems;
+
+//       let updatedKabanColumns = kabanColumns.map(columns => {
+//         if(columns.id === updatedColumn.id) {
+//           return {
+//             ...updatedColumn
+//           }
+//         }
+
+//         return columns;
+//       });
+
+//       setColumns(updatedKabanColumns);
+//     } else if(destinationColumn.items.length > 0) {
+//       console.log(destinationColumn.items.length )
+//       console.log(destination.index)
+//       console.log('CASE 3.2 =>')
+//       // Remove da coluna inicial
+//       let filteredDraggedItems = updatedColumn.items.filter(item => draggedTask.id !== item.id);
+//       updatedColumn.items = filteredDraggedItems;
+//       // // inseri na coluna nova
+//       destinationColumn.items.splice(destination.index, 0, draggedTask);
+
+//       let updatedKabanColumns = kabanColumns.map(columns => {
+//         if(columns.id === updatedColumn.id) {
+//           return {
+//             ...updatedColumn
+//           }
+//         }
+
+//         if(columns.id === destinationColumn.id){
+//           return {
+//             ...destinationColumn
+//           }
+//         }
+
+//         return columns;
+//       });
+
+//       setColumns(updatedKabanColumns);
+//     }
+//   }
+
+// }
