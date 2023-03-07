@@ -1,5 +1,5 @@
-import { DraggableProvidedDraggableProps, DraggingStyle, NotDraggingStyle } from "react-beautiful-dnd";
-import styled from "styled-components";
+import { DraggableProvidedDraggableProps } from "react-beautiful-dnd";
+import styled, { css } from "styled-components";
 
 interface Props {
   isDragging: boolean;
@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const Container = styled.div<Props>`
-  width: 300px;
+  width: 100%;
   min-height: 60px;
 
   color: #363636;
@@ -19,6 +19,12 @@ export const Container = styled.div<Props>`
 
   display: flex;
   justify-content: center;
+
+  ${({isDragging}) => isDragging ? css`
+    rotate: 5deg;    
+  ` : css`
+    rotate: 0deg;
+  `}
   
 `;
 

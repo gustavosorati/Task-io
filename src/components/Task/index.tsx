@@ -25,7 +25,7 @@ export function Task({provided, snapshot, task}: Props) {
       draggingStyles={provided.draggableProps}     
       onClick={handleOnClick}
     > 
-      <Status type={task.status} />
+      <Status type={"completed"} />
       
       <Content>
         <div className="header">
