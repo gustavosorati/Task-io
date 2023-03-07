@@ -75,8 +75,10 @@ function Home() {
                     {...provided.droppableProps}
                   >
                     
-                    <Styled.ColumnContent ref={provided.innerRef} 
-                    {...provided.droppableProps}>
+                    <Styled.ColumnContent 
+                      ref={provided.innerRef} 
+                      {...provided.droppableProps}
+                    >
                       
                       {column.items.map((task, index) => (
                       <Draggable draggableId={task.id} index={index} key={task.id}>

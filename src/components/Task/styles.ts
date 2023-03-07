@@ -7,6 +7,9 @@ interface Props {
 }
 
 export const Container = styled.div<Props>`
+  display: flex;
+  justify-content: center;
+
   width: 100%;
   min-height: 60px;
 
@@ -14,11 +17,9 @@ export const Container = styled.div<Props>`
   border-radius: 4px; 
   background-color: #fff;
   /* border-color: ${({isDragging}) => isDragging ? "red" : "transparent"}; */
-  box-shadow: ${({isDragging}) => isDragging ? "none" : "0px 1px 1px rgba(0, 0, 0, 0.1)"};
+  box-shadow: ${({isDragging}) => isDragging ? "0px 10px 5px rgba(0, 0, 0, 0.15)" : "0px 1px 1px rgba(0, 0, 0, 0.1)"};
   ${({draggingStyles}) => ({...draggingStyles.style})}
 
-  display: flex;
-  justify-content: center;
 
   ${({isDragging}) => isDragging ? css`
     rotate: 5deg;    
