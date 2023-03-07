@@ -1,6 +1,8 @@
 export interface ITask {
   id: string;
-  content: string;
+  title: string;
+  description?: string;
+  status: "in progress" | "completed";
 }
 
 export interface IColumns {
